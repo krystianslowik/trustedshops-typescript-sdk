@@ -1,6 +1,8 @@
 import axios from "axios";
-import { AuthenticationApiAxiosParamCreator as OAuth } from "../generated/auth";
-import type { OauthTokenPost200Response } from "../generated/auth";
+import {
+  OAuthTokenResponse,
+  AuthenticationConfig,
+} from "../interfaces/Auth.model";
 
 export class AuthenticationManager {
   private clientId: string;
@@ -9,31 +11,31 @@ export class AuthenticationManager {
   private accessToken: string | null = null;
   private tokenExpiresAt: number | null = null;
 
-  constructor(clientId: string, clientSecret: string, tokenEndpoint: string) {
-    this.clientId = clientId;
-    this.clientSecret = clientSecret;
-    this.tokenEndpoint = tokenEndpoint;
+  constructor(config: AuthenticationConfig) {
+    this.clientId = config.clientId;
+    this.clientSecret = config.clientSecret;
+    this.tokenEndpoint = config.tokenEndpoint;
   }
 
   public async authenticate(): Promise<void> {
     try {
-      const oauthParams = await OAuth().oauthTokenPost(
-        this.clientId,
-        this.clientSecret,
-        "client_credentials",
-        this.tokenEndpoint
+      const response = await axios.post<OAuthTokenResponse>(
+        this.tokenEndpoint,
+        new URLSearchParams({
+          grant_type: "client_credentials",
+          client_id: this.clientId,
+          client_secret: this.clientSecret,
+        }),
+        {
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        }
       );
 
-      const response = await axios.request<OauthTokenPost200Response>({
-        ...oauthParams.options,
-        url: this.tokenEndpoint,
-      });
-
       const data = response.data;
-      this.accessToken = data.access_token || null;
-      this.tokenExpiresAt = data.expires_in
-        ? Date.now() + data.expires_in * 1000
-        : null;
+      this.accessToken = data.access_token;
+      this.tokenExpiresAt = Date.now() + data.expires_in * 1000;
 
       if (!this.accessToken) {
         throw new Error("Failed to obtain access token");
