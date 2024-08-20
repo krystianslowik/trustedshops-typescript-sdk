@@ -1,0 +1,869 @@
+openapi: 3.0.1
+info:
+  title: Invite Microservice
+  description: Invite application
+  version: "1.0"
+servers:
+  - url: https://api.etrusted.com
+paths:
+  /bounced-invites:
+    get:
+      tags:
+        - Invites
+      summary: Get a list of bounced invites
+      description: |
+        This method retrieves a report of bounced invites.
+        The result set can be modified using a set of filters.
+
+        Query parameters can be added to the request, separated by `&`.
+
+        Conceptually, there are two types of categories for the query parameters: actual filter parameters on the one hand and pagination parameters on the other.
+
+        `sentAfter` and `sentBefore` are filter parameters.
+        Of all the bounced invites stored in the *eTrusted Platform*, only those that match the filter parameters will be retrieved from the database.
+
+        Note that the filter can be set in such a way that the response will contain an empty list.
+
+        As an additional feature, *eTrusted* implemented a pagination cursor that can be set via query parameters:
+        `count`, `after` and `before` operate on this filtered list.
+        They define a segment that is returned with the response and contains exactly the data that is needed for the pagination operation the call has been made for.
+        Also see the cursor object in the response.
+        In a sense, the cursor describes the pagination state of the client and encodes it in the request as well as the response.
+        This is necessary because RESTful APIs are stateless by design.
+      operationId: get-bounced-invites
+      parameters:
+        - name: Authorization
+          in: header
+          description: An authorisation header containing meta information, see [OAuth2](/reference/authentication-2).
+          required: true
+          schema:
+            type: string
+        - name: after
+          in: query
+          description: |
+            `after` is an invite ID. The list of invites in the response will only contain invites submitted earlier than the invite with this ID.
+
+            Example: `inv-xxxxxxxa-yyyy-xxxx-yyyy-xxxxxxxxxxxx`
+          schema:
+            type: string
+        - name: before
+          in: query
+          description: |
+            `before` is an invite ID. The list of invites in the response will only contain invites submitted later than the invite with this ID.
+
+            Example: `inv-xxxxxxxb-yyyy-xxxx-yyyy-xxxxxxxxxxxx`
+          schema:
+            type: string
+        - name: sentAfter
+          in: query
+          description: |
+            `sentAfter` is a timestamp in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) and [RFC 3339](https://tools.ietf.org/html/rfc3339) compliant format `yyyy-MM-dd’T’HH:mm:ss.SSSZ`.
+            The list of invites will only contain invites sent at a later timestamp.
+
+            Example: `2018-02-01T17:10:42.733Z`
+          schema:
+            type: string
+        - name: sentBefore
+          in: query
+          description: |
+            `sentBefore` is a timestamp in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) and [RFC 3339](https://tools.ietf.org/html/rfc3339) compliant format `yyyy-MM-dd’T’HH:mm:ss.SSSZ`.
+            The list of invites will only contain invites sent at an earlier timestamp.
+
+            Example: `2018-02-01T17:10:42.733Z`
+          schema:
+            type: string
+        - name: count
+          in: query
+          description: The desired number of invites to be retrieved.
+          schema:
+            type: integer
+            default: 50
+      responses:
+        200:
+          description: The list of bounced invites.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BouncedInviteListResponse"
+        401:
+          description: Unauthorized
+          content: {}
+        403:
+          description: Forbidden
+          content: {}
+        404:
+          description: Not Found
+          content: {}
+      deprecated: true
+  /channels/{channelId}/trigger-date:
+    get:
+      tags:
+        - Trigger Date
+      summary: Get a trigger date configuration by channel ID.
+      description: This method returns a trigger date configuration for a channel.
+      operationId: get-trigger-date-configuration-by-channel
+      parameters:
+        - name: token
+          in: header
+          description: An authorisation header containing meta information, see [OAuth2](/reference/authentication-2).
+          required: true
+          schema:
+            type: string
+        - name: channelId
+          in: path
+          description: The channel UUID.
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Trigger Date Configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TriggerDateConfigurationResponse"
+        400:
+          description: Bad Request
+          content: {}
+        401:
+          description: Unauthorized
+          content: {}
+        403:
+          description: Forbidden
+          content: {}
+        404:
+          description: Not Found
+          content: {}
+    put:
+      tags:
+        - Trigger Date
+      summary: Update a trigger date configuration by channel ID.
+      description: This method updates a trigger date configuration for a channel.
+      operationId: put-trigger-date-configuration-by-channel
+      parameters:
+        - name: token
+          in: header
+          description: An authorisation header containing meta information, see [OAuth2](/reference/authentication-2).
+          required: true
+          schema:
+            type: string
+        - name: channelId
+          in: path
+          description: The channel UUID.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: |
+          The data object that will be used to update the trigger date configuration for a given channel within the *eTrusted Platform*.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TriggerDateConfigurationRequest"
+        required: true
+      responses:
+        200:
+          description: Trigger Date Configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TriggerDateConfigurationResponse"
+        400:
+          description: Bad Request
+          content: {}
+        401:
+          description: Unauthorized
+          content: {}
+        403:
+          description: Forbidden
+          content: {}
+        404:
+          description: Not Found
+          content: {}
+      x-codegen-request-body-name: body
+    delete:
+      tags:
+        - Trigger Date
+      summary: Delete a trigger date configuration by channel ID.
+      description: This method deletes the trigger date configuration for a channel.
+      operationId: delete-trigger-date-configuration-by-channel
+      parameters:
+        - name: token
+          in: header
+          description: An authorisation header containing meta information, see [OAuth2](/reference/authentication-2).
+          required: true
+          schema:
+            type: string
+        - name: channelId
+          in: path
+          description: The channel UUID.
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: Deleted
+          content: {}
+        400:
+          description: Bad Request
+          content: {}
+        401:
+          description: Unauthorized
+          content: {}
+        403:
+          description: Forbidden
+          content: {}
+        404:
+          description: Not Found
+          content: {}
+  /channels/{id}/invites:
+    get:
+      tags:
+        - Endpoints
+      summary: Get a list of invites
+      description: |
+        This method retrieves the list of review invites by channel ID.
+        The result set can be modified using a set of filters.
+
+        The path must contain a `channelId`. Note that this must be the channel ID that was assigned by *eTrusted* and *not* a user-defined ID.
+
+        Query parameters can be added to the request, separated by `&`.
+        By adding parameters to the request, you can filter the result list and:
+
+        * specify the maximum number of invites they want to retrieve with this request
+        * retrieve invites submitted within a certain time frame
+
+        The response object contains the list of invite objects as well as information for paginating invites in a user interface.
+        See our guide on [paginating response data](https://developers.etrusted.com/etrusted-api.html#tag/Pagination) for more information.
+      operationId: get-invite-list
+      parameters:
+        - name: token
+          in: header
+          description: An authorisation header containing meta information, see [OAuth2](/reference/authentication-2).
+          required: true
+          schema:
+            type: string
+        - name: Channel-Id
+          in: header
+          description:
+            Channel-Id contains the user-defined channel name. This allows
+            the resource to to be called without a channel ID in the path. If using
+            this header, the channel ID in the path must be set to "user-defined".
+          schema:
+            type: string
+        - name: id
+          in: path
+          description: |
+            The channel UUID for which to retrieve the list of invites.
+          required: true
+          schema:
+            type: string
+        - name: count
+          in: query
+          description: The desired number of invite objects to be retrieved per page.
+          schema:
+            type: integer
+        - name: after
+          in: query
+          description: |
+            `after` is an invite UUID.
+            The list of invites in the response will only contain invites sent earlier than the invite with this ID.
+          schema:
+            type: string
+        - name: before
+          in: query
+          description: |
+            `before` is an invite UUID.
+            The list of invites in the response will only contain invites sent later than the invite with this ID.
+          schema:
+            type: string
+        - name: query
+          in: query
+          description: |
+            `query` is a search term that is matched against the transaction reference and customer email address properties (see the response schema).
+            Only matching invites will be included in the response.
+          schema:
+            type: string
+      responses:
+        200:
+          description: The list of invites.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InviteResponseList"
+        401:
+          description: Unauthorized
+          content: {}
+        403:
+          description: Forbidden
+          content: {}
+        404:
+          description: Not Found
+          content: {}
+components:
+  schemas:
+    InviteTemplatePriority:
+      type: object
+      properties:
+        transport:
+          $ref: "#/components/schemas/InviteTemplateTransportEnum"
+        templateRef:
+          type: string
+          description: The template URI for the invite rule.
+          example: /templates/xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+    InviteTemplateTransportEnum:
+      type: string
+      description: The means of transportation for the invite.
+      example: EMAIL
+      enum:
+        - EMAIL
+        - SMS
+    EstimatedDeliveryConfigurationRequest:
+      required:
+        - active
+      type: object
+      properties:
+        sendingDelay:
+          type: string
+          description: |
+            (Deprecated)
+            This is a delay for sending out the invite which will be added to the provided estimated delivery date. It is a duration in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) and [RFC 3339](https://tools.ietf.org/html/rfc3339) compliant format `PnYnMnWnDTnHnMnS`.
+
+            *Example*:
+              `estimated delivery date via Event`: 2020-05-12
+              `sendingDelay`: P3D
+              `Result`: 2020-05-15
+          example: P3D
+        active:
+          type: boolean
+          description:
+            A boolean value to activate or deactivate the estimated delivery
+            configuration.
+          example: true
+    EstimatedDeliveryConfigurationResponse:
+      required:
+        - active
+      type: object
+      properties:
+        active:
+          type: boolean
+          description:
+            A boolean value to activate or deactivate the estimated delivery
+            configuration.
+          example: true
+        createdAt:
+          type: string
+          description:
+            The date and time when the rule was created, in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html)
+            and [RFC 3339](https://tools.ietf.org/html/rfc3339) compliant format `yyyy-MM-dd’T’HH:mm:ss.SSSZ`.
+          format: date-time
+          example: 2018-01-04T12:09:50.722Z
+        updatedAt:
+          type: string
+          description:
+            The date and time when the rule was last modified, in the [ISO
+            8601](https://www.iso.org/iso-8601-date-and-time-format.html) and [RFC
+            3339](https://tools.ietf.org/html/rfc3339) compliant format `yyyy-MM-dd’T’HH:mm:ss.SSSZ`.
+          format: date-time
+          example: 2018-01-04T12:09:50.722Z
+    TriggerDateConfigurationRequest:
+      required:
+        - active
+      type: object
+      properties:
+        active:
+          type: boolean
+          description:
+            A boolean value to activate or deactivate the trigger date
+            configuration.
+          example: true
+    TriggerDateConfigurationResponse:
+      required:
+        - active
+      type: object
+      properties:
+        active:
+          type: boolean
+          description:
+            A boolean value to activate or deactivate the trigger date
+            configuration.
+          example: true
+        createdAt:
+          type: string
+          description:
+            The date and time when the rule was created, in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html)
+            and [RFC 3339](https://tools.ietf.org/html/rfc3339) compliant format `yyyy-MM-dd’T’HH:mm:ss.SSSZ`.
+          format: date-time
+          example: 2018-01-04T12:09:50.722Z
+        updatedAt:
+          type: string
+          description:
+            The date and time when the rule was last modified, in the [ISO
+            8601](https://www.iso.org/iso-8601-date-and-time-format.html) and [RFC
+            3339](https://tools.ietf.org/html/rfc3339) compliant format `yyyy-MM-dd’T’HH:mm:ss.SSSZ`.
+          format: date-time
+          example: 2018-01-04T12:09:50.722Z
+    BouncedInviteListResponse:
+      required:
+        - items
+      type: object
+      properties:
+        totalElements:
+          type: integer
+          description:
+            The total number of bounced invites stored in the *eTrusted
+            Platform* that also fulfill the filter criteria in the corresponding request.
+          example: 95
+        paging:
+          required:
+            - count
+            - cursor
+          type: object
+          properties:
+            count:
+              type: integer
+              description: |
+                This is the number of bounced invites displayed in one page of the pagination.
+
+                Note that this number might be lower than the `count` number in the request. This happens when the last page is reached.
+
+                For example: A total number of 105 bounced invites are displayed in chunks of 20 invites per page. The sixth and last page will only have 5 bounced invites. The `count` property will hold the value `5`.
+              example: 10
+            cursor:
+              required:
+                - after
+                - before
+              type: object
+              properties:
+                before:
+                  type: string
+                  description: |
+                    `before` is an invite ID to retrieve the previous page in the pagination.
+                  example: inv-xxxxxxxa-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+                after:
+                  type: string
+                  description: |
+                    `after` is an invite ID to retrieve the next page in the pagination.
+                  example: inv-xxxxxxxb-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+              description:
+                The cursor object contains information to navigate to the
+                previous and next pages in a subsequent request.
+            links:
+              required:
+                - next
+                - previous
+              type: object
+              properties:
+                previous:
+                  type: string
+                  description: The link to the previous page in the pagination.
+                  example: https://api.etrusted.com/invites/bounces?count=10&before=inv-xxxxxxxa-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+                next:
+                  type: string
+                  description: The link to the next page in the pagination.
+                  example: https://api.etrusted.com/invites/bounces?count=10&after=inv-xxxxxxxb-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+              description: |
+                Links to the previous and next pages in the pagination.
+
+                Note that the links contain the exact filter parameters that were used in the request (`sentBefore`, `sentAfter`).
+                This makes sure that the pagination is always relative to the same filter in subsequent requests.
+                If developers build URLs themselves using `after`, `before`, and the matching information inside the `cursor` object, they may need to ensure to recreate the same filter as well.
+          description:
+            The paging object holds pagination information for the bounced
+            invites retrieved via this API.
+        items:
+          type: array
+          description: |
+            This is the list of bounced invite objects.
+
+            Each `item` object represents a single bounced invite.
+          items:
+            $ref: "#/components/schemas/BouncedInviteResponse"
+      description: The list of bounced invites.
+    BouncedInviteResponse:
+      required:
+        - _object
+        - accountRef
+        - customer
+        - reason
+        - sentAt
+      type: object
+      properties:
+        _object:
+          type: string
+          description: The type of this invite.
+          example: BouncedInvite
+        id:
+          type: string
+          description: A unique identifier for this invite.
+          example: inv-xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+        accountRef:
+          type: string
+          description: A reference to the account the invite belongs to.
+          example: acc-xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+        sentAt:
+          type: string
+          description:
+            The date and time when the invite was sent. It is a timestamp
+            in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html)
+            and [RFC 3339](https://tools.ietf.org/html/rfc3339) compliant format `yyyy-MM-dd’T’HH:mm:ss.SSSZ`.
+          format: date-time
+          example: 2018-02-01T17:09:41.79Z
+        customer:
+          required:
+            - email
+          type: object
+          properties:
+            email:
+              type: string
+              description: The email address of the customer.
+              example: john.doe@example.com
+          description: The customer who was invited to the review.
+        reason:
+          type: string
+          description: The reason the invite could not be sent.
+          example: INVALID_TEMPLATE
+      description: A single bounced invite
+    Template:
+      type: object
+      properties:
+        id:
+          type: string
+          description: A reference to the template used for generating the questionnaire.
+          example: qrt-xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+        name:
+          type: string
+          description: The title of the questionnaire.
+          example: After Sales Standard EN
+      description: The template used for generating the questionnaire for the invite.
+    Email:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The customer's or organisation's name.
+          example: eTrusted
+        email:
+          type: string
+          description: The email address.
+          example: ex@mple.com
+      description:
+        Email data for identifying a customer or an organisation by email
+        address.
+    InviteResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The invite UUID.
+          example: inv-xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+        _object:
+          type: string
+          description: The invite object type.
+          example: Invite
+        mode:
+          type: string
+          description: |
+            The invite mode.
+
+            Automatic invites are triggered by invite rules, while manual invites are triggered manually (e.g. in the Control Centre).
+          example: AUTOMATIC
+          enum:
+            - AUTOMATIC
+            - MANUAL
+        reviewType:
+          type: string
+          description: |-
+            The type of review the invitation asks for.
+
+            The invite has been sent asking for feedback either about the service, the transaction's products or for both.
+          example: SERVICE_REVIEW
+          enum:
+            - SERVICE_REVIEW
+            - PRODUCT_REVIEW
+            - SERVICE_AND_PRODUCT_REVIEW
+        accountRef:
+          type: string
+          description: A UUID as account reference.
+          example: acc-xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+        channelRef:
+          type: string
+          description: A UUID as channel reference.
+          example: chl-xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+        locale:
+          type: string
+          description:
+            The channel [locale](#tag/Locales) that determines the language
+            that is used for this channel.
+          format: locale
+          example: en_GB
+        platform:
+          type: string
+          description: Represents the name of an external review platform.
+          example: GOOGLE
+        customer:
+          type: object
+          properties:
+            id:
+              type: string
+              description: The customer UUID.
+              example: cst-xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+            firstName:
+              type: string
+              description: First name of the customer.
+              example: John
+            lastName:
+              type: string
+              description: Last name of the customer.
+              example: Doe
+            email:
+              type: string
+              description: |
+                Email address of the customer.
+                This must be a valid email address.
+              example: john.doe@example.com
+            phoneNumber:
+              pattern: ^\+?[1-9]\d{1,14}$
+              type: string
+              description: A phone number in [E.164 format](https://www.itu.int/rec/T-REC-E.164/en).
+              example: "442071838750"
+            preferredLocale:
+              type: string
+              description: The preferred locale for this customer.
+              example: en_GB
+            consents:
+              type: array
+              description: This is an array of consent objects for the customer.
+              items:
+                type: object
+                properties:
+                  purpose:
+                    type: string
+                    description: |
+                      The purpose of the consent.
+                      This indicates what may and may not be done with the personal data of the customer.
+                      As of yet, this property can only have the value `DATA_FORWARDING`.
+                    example: DATA_FORWARDING
+                    x-extensible-enum:
+                      - DATA_FORWARDING
+                  given:
+                    type: boolean
+                    description:
+                      This boolean value indicates whether a consent was
+                      given or not.
+                description:
+                  This is a consent object. It stores information about
+                  the purpose of the consent and whether the consent was given or
+                  not.
+          description: The data of the customer who is invited to the review.
+        inviteSource:
+          type: string
+          description: |
+            The source system that triggered the invite.
+            This property can have the following values:
+            - `TRUSTBADGE`
+            - `IMPORTER`
+            - `APP_IOS`
+            - `APP_ANDROID`
+            - `REVIEW_COLLECTOR`
+            - `CUSTOM`
+          example: TRUSTBADGE
+          x-extensible-enum:
+            - TRUSTBADGE
+            - IMPORTER
+            - APP_IOS
+            - APP_ANDROID
+            - REVIEW_COLLECTOR
+            - CUSTOM
+        transaction:
+          type: object
+          properties:
+            id:
+              type: string
+              description: The transaction UUID.
+              example: txn-xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+            reference:
+              type: string
+              description: The transaction reference, e.g. `ORDER-12345`.
+              example: ORDER-12792
+            date:
+              type: string
+              description:
+                The date and time when the transaction took place, in the
+                [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html)
+                and [RFC 3339](https://tools.ietf.org/html/rfc3339) compliant format
+                `yyyy-MM-dd’T’HH:mm:ss.SSSZ`.
+              format: date-time
+              example: 2018-01-04T12:09:50.722Z
+          description: The transaction associated with the invite.
+        scheduledAt:
+          type: string
+          description:
+            The date and time when the transaction was scheduled, in the
+            [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) and
+            [RFC 3339](https://tools.ietf.org/html/rfc3339) compliant format `yyyy-MM-dd’T’HH:mm:ss.SSSZ`.
+          format: date-time
+          example: 2018-01-04T12:09:50.722Z
+        estimatedDeliveryDate:
+          type: string
+          description:
+            The estimated date of the delivery. It is a date in the ISO
+            8601 and RFC3339 compliant format `yyyy-MM-dd`.
+          format: date
+          example: 2017-01-07
+        template:
+          $ref: "#/components/schemas/Template"
+        sender:
+          $ref: "#/components/schemas/Email"
+        replyTo:
+          $ref: "#/components/schemas/Email"
+        event:
+          type: string
+          description: A UUID as event reference.
+          example: evt-xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+        createdAt:
+          type: string
+          description:
+            The date and time when the invite was created, in the [ISO
+            8601](https://www.iso.org/iso-8601-date-and-time-format.html) and [RFC
+            3339](https://tools.ietf.org/html/rfc3339) compliant format `yyyy-MM-dd’T’HH:mm:ss.SSSZ`.
+          format: date-time
+          example: 2018-02-01T17:09:41.79Z
+        updatedAt:
+          type: string
+          description:
+            The date and time when the invite was last modified, in the
+            [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) and
+            [RFC 3339](https://tools.ietf.org/html/rfc3339) compliant format `yyyy-MM-dd’T’HH:mm:ss.SSSZ`.
+          format: date-time
+          example: 2018-02-01T17:09:41.79Z
+        sentAt:
+          type: string
+          description:
+            The date and time when the invite was sent to the customer,
+            in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html)
+            and [RFC 3339](https://tools.ietf.org/html/rfc3339) compliant format `yyyy-MM-dd’T’HH:mm:ss.SSSZ`.
+          format: date-time
+          example: 2018-02-01T17:09:41.79Z
+        status:
+          required:
+            - name
+          type: object
+          properties:
+            name:
+              type: string
+              description: The invite state.
+              example: REJECTED
+              enum:
+                - SCHEDULED
+                - CANCELED
+                - SENT
+                - DELIVERED
+                - NOT_DELIVERED
+                - REJECTED
+                - OPENED
+                - CLICKED
+                - RENDERED
+                - REVIEW_WRITTEN
+                - READY_FOR_RENDER
+            reason:
+              type: string
+              description: The reason for the invite state.
+              example: INVALID_RECIPIENT_EMAIL
+              enum:
+                - INVALID_TEMPLATE
+                - RENDERING_ERROR
+                - INVALID_RECIPIENT_EMAIL
+                - TEMPORARY_RECIPIENT_ERROR
+                - REPORTED_AS_SPAM_SENDER
+                - REPORTED_AS_SPAM_RECIPIENT
+                - REPORTED_AS_SPAM_CONTENT
+                - REPORTED_AS_SPAM_FREQUENCY
+                - PROVIDER_ERROR
+                - DELAYED
+                - RECIPIENT_UNSUBSCRIBED
+                - RECIPIENT_BLACKLISTED_PROVIDER
+                - RECIPIENT_BLACKLISTED_ACCOUNT
+                - RECIPIENT_BLACKLISTED_CHANNEL
+                - RECIPIENT_BLACKLISTED_EMAIL
+                - BLACKLISTED_DOMAIN
+                - DUPLICATE
+                - INVITE_SENDING_SUSPENDED_BY_EMPLOYEE
+                - INVITE_SENDING_SUSPENDED_BY_CUSTOMER
+                - INTERNAL_ERROR
+                - BLOCKED_BY_CONSUMER
+          description: |
+            Status information of the invite when the API request was processed.
+
+            See our [glossary entry for invites](https://developers.etrusted.com/glossary.html#invite) for more information about the statuses.
+      description: A single invite object retrieved via API.
+    InviteResponseList:
+      type: object
+      properties:
+        totalElements:
+          type: integer
+          description:
+            This field has the default value of 0 and will be removed in
+            the future cause backend compatibillity issue.
+          example: 95
+        paging:
+          type: object
+          properties:
+            count:
+              type: integer
+              description: |
+                The number of invites displayed in one page of the pagination.
+
+                Note that this number might be lower than the `count` number in the request.
+                This happens when the last page is reached.
+
+                For example: A total number of 105 invites are displayed in chunks of 20 invites per page.
+                The sixth and last page will only have 5 reviews.
+                The `count` property will hold the value `5`.
+              example: 10
+            cursor:
+              type: object
+              properties:
+                after:
+                  type: string
+                  description: |
+                    `after` is an invite UUID to retrieve the next page in the pagination.
+                  example: inv-xxxxxxxb-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+                before:
+                  type: string
+                  description: |
+                    `before` is an invite UUID to retrieve the previous page in the pagination.
+                  example: inv-xxxxxxxa-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+              description:
+                The cursor object contains information to navigate to the
+                previous and next pages in a subsequent request.
+            links:
+              type: object
+              properties:
+                previous:
+                  type: string
+                  description: The link to the previous page in the pagination.
+                  example: https://api.etrusted.com/channels/channelId/invites?count=10&before=inv-xxxxxxxa-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+                next:
+                  type: string
+                  description: The link to the next page in the pagination.
+                  example: https://api.etrusted.com/channels/channelId/invites?count=10&after=inv-xxxxxxxb-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+              description: |
+                Links to the previous and next pages in the pagination.
+
+                Note that the links contain the same `query` filter parameters that was used in the request.
+                This makes sure that the pagination is always relative to the same filter in subsequent requests.
+                If you build URLs yourself using `after`, `before`, make sure that you recreate the same filter as well.
+          description:
+            The paging object holds pagination information for the invites
+            retrieved via this API.
+        items:
+          type: array
+          description: |
+            The list of invite objects.
+
+            Each `item` object represents a single retrieved invite.
+          items:
+            $ref: "#/components/schemas/InviteResponse"
+x-readme:
+  explorer-enabled: false

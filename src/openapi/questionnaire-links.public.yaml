@@ -1,0 +1,254 @@
+openapi: 3.0.1
+info:
+  title: Questionnaire Links API
+  description: The questionnaire link API.
+  version: 1.0.0
+  x-api-id: f7705994-4674-4ae7-a5a5-09d562dce09b
+servers:
+  - url: https://api.etrusted.com/
+security:
+  - bearerAuth: []
+paths:
+  /questionnaire-links:
+    post:
+      tags:
+        - Endpoints
+      summary: Retrieve a questionnaire link
+      description: Each questionnaire link points to a specific rendered questionnaire. The link will expire after a set amount of time.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuestionnaireLinkRequest"
+        required: false
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionnaireLinkResponse"
+        400:
+          description: Bad Request
+          content: {}
+        401:
+          description: Unauthorized
+          content: {}
+        403:
+          description: Forbidden
+          content: {}
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    QuestionnaireLinkRequest:
+      type: object
+      description: The request parameters for generating a transactional questionnaire link.
+      required:
+        - channel
+        - customer
+        - questionnaireTemplate
+        - system
+        - systemVersion
+        - transaction
+      properties:
+        type:
+          type: string
+          description: |
+            The type parameter defines the transactional event type.
+            This parameter is useful to connect a feedback with a specific transaction type (e.g. sales, after-sales, checkout, etc.).
+            By default the type is `link_generation`.
+          example: sales
+        questionnaireTemplate:
+          type: object
+          description: The `questionnaireTemplate` property identifies the questionnaire template used to render the actual questionnaire.
+          required:
+            - id
+          properties:
+            id:
+              type: string
+              description: |
+                The `id` property is the *eTrusted* ID of the questionnaire template to use.
+                You can get the list of available templates using the [Templates API](/reference/getalltemplates)
+              example: tpl-qst-12261ad3-d36b-4a3a-a4ab-850920d7b11f
+        customer:
+          type: object
+          description: |
+            The customer object includes all data of the customer who is invited to leave a review.
+
+            If developers do not want to use the optional properties, they should omit them instead of including empty strings as their values.
+          required:
+            - email
+          properties:
+            id:
+              type: string
+              description: The ID of the customer who is invited to leave a review.
+              example: cst-xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+            firstName:
+              type: string
+              description: First name of the customer who is invited to leave a review (e.g. `John`).
+              example: John
+            lastName:
+              type: string
+              description: Last name of the customer who is invited to leave a review (e.g. `Doe`).
+              example: Doe
+            email:
+              type: string
+              description: Email address of the customer who is invited to leave a review (e.g. `john.doe@example.com`). This must be a valid email address.
+              example: john.doe@example.com
+            mobile:
+              type: string
+              description: Mobile telephone number of the customer who is invited to leave a review. The mobile number must have international format including `+` and country code. (e.g. `+49123456789`).
+              example: "+49123456789"
+            address:
+              type: string
+              description: Address of the customer who is invited to leave a review (e.g. `Anystreet 17, Anycity, Anystate 12345`).
+              example: Anystr. 17, 12345
+        channel:
+          description: A company can interact with their customers through different channels (e.g. online, offline, app, etc.). Those channels can be mapped in *eTrusted* under the account. The channel object contains the information about the channel associated with the review.
+          required:
+            - id
+          type: object
+          properties:
+            id:
+              type: string
+              description: The property `id` is the unique identifier of the channel associated with the review. Organisations can choose to use the *eTrusted* ID of the channel or an ID of any external system (e.g. `CH-123456`) if *eTrusted* is properly configured.
+              example: example_unique_identifier
+            type:
+              type: string
+              description: |
+                `etrusted`: if the organisation chooses to use the *eTrusted* ID usually has the format `chl-xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx`.
+
+                `user_defined`: if the organisation uses an ID that was generated by themselves.
+              example: etrusted
+              default: etrusted
+              enum:
+                - user_defined
+                - etrusted
+        transaction:
+          type: object
+          description: |
+            The transaction object defines the transaction for which the customer shall write a review.
+
+            If developers do not want to use the optional `date` property, they should omit it instead of including an empty strings as its value.
+          required:
+            - reference
+          properties:
+            reference:
+              type: string
+              description: The reference property can contain any reference used by organisations to identify the transaction. This string must be unique (the order or invoice number, e.g. `order-12345`).
+              example: order-12345
+            date:
+              type: string
+              description: The date reference specifies the date at which the event to be reviewed took place. It is a timestamp in the ISO 8601 and RFC3339 compliant format `yyyy-MM-dd’T’HH:mm:ss.SSSZ`. Check the [glossary](/docs/glossory#iso-8601) for examples of valid datetime formats.
+              format: date-time
+              example: 2017-01-01T13:30:15Z
+        products:
+          type: array
+          description: |
+            This is a list of products.
+
+            It contains the products that are associated with the event.
+
+            It includes all data needed for product reviews for these products.
+
+            **NB:** The products property is required in case the `questionnaireTemplate` property is set to the id of the  `Standalone Product Review Template`. 
+            If the product property is filled out for any of the other four `questionnaireTemplate` above, the product reviews page will be added to the generated questionnaire.
+          items:
+            required:
+              - name
+              - sku
+              - url
+            type: object
+            properties:
+              gtin:
+                type: string
+                description: |
+                  The GTIN identifies the product globally.
+                  A GTIN can be an ISBN, an EAN, and much more.
+                  Refer to [gtin.info](https://www.gtin.info/)
+                example: "1234567890123"
+              imageUrl:
+                type: string
+                description: |
+                  A link to a product image.
+                  *eTrusted* can display an image of the product to the customer who is writing a review.
+                  This makes it easier for customers to remember and recognize the product.
+                example: https://www.specialbrandshop.com/article123-TS-WH-M/image.jpg
+              name:
+                type: string
+                description: |
+                  The product name contains information about a
+                  product that is associated with the event (e.g. `Specialbrand T-Shirt White M`).
+                example: Specialbrand T-Shirt White M
+              mpn:
+                type: string
+                description: |
+                  The Manufacturer Part Number is an identifier for a product by the manufacturer if applicable.
+                  In some cases it can serve as a substitute for the GTIN.
+                example: "23687778"
+              sku:
+                type: string
+                description: |
+                  The Stock Keeping Unit is a specific article number of the product, most often assigned by a specific retail shop as a scannable bar code.
+                  It lets the shops track movement of inventory.
+                  The SKU must be unique and usually consists of about 8 characters (e.g. `1234-TS-WH-M`).
+                example: 1234-TS-WH-M
+              brand:
+                type: string
+                description: |
+                  The brand of the product (e.g. `specialbrand`).
+                  A product can only have one brand.
+                example: specialbrand
+              url:
+                type: string
+                description: |
+                  A link to the product detail page in your online shop or public catalog (e.g. `http://www.specialbrandshop.com/article123-TS-WH-M/`).
+                example: https://www.specialbrandshop.com/article123-TS-WH-M/
+        metadata:
+          type: object
+          description: |
+            This object can be used to add information (besides what *eTrusted* provides by default) about the customer, event or anything else, e.g. for analysis purposes.
+          properties: {}
+          example:
+            metaKey1: metaValue1
+            metaKey2: metaValue2
+        system:
+          type: string
+          description: |
+            The `system` property identifies the system that issued the questionnaire link API call (e.g. “salesforce”, “sap”, etc.).
+          example: customer_system_name
+        systemVersion:
+          type: string
+          description: |
+            The `systemVersion` property identifies the version of the source system (e.g. “1.0”).
+            This offers organisations the option to use different versions of the same integration without putting this information into the system name.
+          example: "1.0"
+    QuestionnaireLinkResponse:
+      type: object
+      required:
+        - id
+        - link
+        - token
+      properties:
+        id:
+          type: string
+          description: The property `id` identifies the actual questionnaire which  was rendered (e.g. `qre-xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx`).
+          example: qre-xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+        link:
+          type: string
+          description: |
+            This is a link to the questionnaire which can be provided to the customer via the channel the organisation chooses (e.g., SMS, email, etc.).
+            The link is shortened automatically so that it can also be used for channels with space limitations (e.g. SMS).
+          example: https://etru.st/imo2h79nl
+        token:
+          type: string
+          description: |
+            The `questionnaireToken` is the jwt token of the questionnaire which was rendered.
+            *eTrusted* uses the compact serialisation format as defined in JSON Web Signature (JWS) standard [rfc7515](https://datatracker.ietf.org/doc/html/rfc7515), like "head.payload.signature".
+          example: eyJraWQiOiIvdG1wbHMvand0X3B1YmxpY19rZXkvZDRhMmQ2YjYtNzRjNS00NjZlLWI3MWQtNTQ1NTk4OGY0YjliIiwidHlwIjoiSldUIiwiYWxnIjoiUlMyNTYifQ.eyJxdWVzdGlvbm5haXJlUmVmIjoicXJlLTdjMGJkNzM4LTM3NWItNDk4Ni05N2E2LTlhZjg2OThlMjRmMiIsImlzcyI6Imh0dHBzOi8vd3d3LmV0cnVzdGVkLmNvbSIsImV2ZW50UmVmIjoiZXZ0LTBjYTk1MTU2L WE5NDQtNDhlNC04Mjc1LTdlZGViMTY2MGUyYyIsInF1ZXN0aW9ubmFpcmVMb2NhbGUiOiJlbl9HQiIsInN5c3RlbVZlcnNpb24iOiIxLjAuMCIsImF1ZCI6Imh0dHBzOi8vZmVlZGJhY2suZXRydXN0ZWQuY29tIiwicXVlc3Rpb25uYWlyZVRlbXBsYXRlUmVmIjoicXJ0LTRhNjFkN2JmLTVkYTMtNDE4Yi1hOThmLWU2MDM1MzRkOWZkNV9lbi1HQiIsInN5c3RlbSI6ImN1c3R vbWVyX3N5c3RlbV9uYW1lIiwiYXBpVmVyc2lvbiI6IjEuMS4wIiwiY29sbGVjdGlvblByb2Nlc3MiOiJDTE9TRURfRkVFREJBQ0siLCJjaGFubmVsUmVmIjoiY2hsLTRiOTQxYjEzLWJiMDEtNDBhOS1iZGZkLWE2ZjA0ZTVjYTEwZSIsImFjY291bnRSZWYiOiJhY2MtODYzYzlkOGQtMTEwOC00NTkxLTg2OGQtNWUwYWFhZDI2Y2Y0IiwiaWF0IjoxNTM2NzY5NjQ3fQ.A8EZkvjUEwFXT_U9bgVgIKfQkyxFY3K3G4YNN3tZzoc50eG1ggYsKzj- _XLnN9tpDnyQXENFz4g8yY9kUK43LLvFxOHdWOjlF0X4ZPngyd4eSgBQTYyofeI39vKzc9EPN9oajrqgog8jHMq4Y7oBa9Z2J4s21Q6N-hCp2vS128f5Wma12Wa9YExPV1Tf21P- v5MMjYiqNan_oxX_3ENjJ07kzxP8SGN5QSbVUgZGmw6y213VDCGpopzm_cTkf67YKpWn4wPNOeo_LDX5P6T85kyZC-F6g9R- uEFUtY_wBv1FrIBokfVfVQWJnbIajUjM21Z3_W5Am3JUyHxPcxnSMg
+x-readme:
+  explorer-enabled: false

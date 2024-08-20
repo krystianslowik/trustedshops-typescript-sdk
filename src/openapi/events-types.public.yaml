@@ -1,0 +1,333 @@
+openapi: 3.0.3
+info:
+  title: Event Types API
+  description: |-
+    This API provides endpoints for setting up, configuring and deleting your event types.
+    The available event types define the valid values for your events, therefore events with an unknown or inactive type are rejected.
+
+    For example, an event type might represent a touchpoint along your customer's journey like *checkout*, *delivered* or *after_sales*.
+    By default, the active event type `checkout` will be setup automatically for all accounts.
+
+    [Please contact us in case you are unsure when adding or removing event types using this API!](https://etrusted.com/en/contact/)
+  version: "1.0"
+x-readme:
+  explorer-enabled: false
+servers:
+  - url: https://api.etrusted.com
+security:
+  - bearerAuth: []
+paths:
+  /event-types:
+    get:
+      tags:
+        - Endpoints
+      operationId: get-event-types
+      summary: Get event types
+      description: This endpoint retrieves event types of your account.
+      parameters:
+        - name: Authorization
+          in: header
+          description: An authorisation header containing meta information, see [OAuth2](/reference/authentication-2)
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: name
+          in: query
+          description: The name of a specific event type to filter for.
+          required: false
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        "200":
+          description: The event types of your account.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EventType"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientError"
+        "401":
+          description: Unauthorized
+    post:
+      tags:
+        - Endpoints
+      operationId: create-event-type
+      summary: Create an event type
+      description: |-
+        This endpoint creates a new event type representing a touchpoint along your customer journey.
+
+        [Please contact us in case you are unsure adding more event types!](https://etrusted.com/en/contact/)
+      parameters:
+        - name: Authorization
+          in: header
+          description: An authorisation header containing meta information, see [OAuth2](/reference/authentication-2).
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        description: The request object used to create the event type.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventTypePost"
+      responses:
+        "201":
+          description: The created event type.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventType"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientError"
+        "401":
+          description: Unauthorized
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientError"
+  "/event-types/{id}":
+    get:
+      tags:
+        - Endpoints
+      operationId: get-event-type
+      summary: Get an event type by ID
+      description: This endpoint retrieves an event type by its [UUID](/reference/uuid-prefixes.
+      parameters:
+        - name: Authorization
+          in: header
+          description: An authorisation header containing meta information, see [OAuth2](/reference/authentication-2).
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: id
+          in: path
+          description: The ID of the event type object.
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The event type object.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventType"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientError"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientError"
+    put:
+      tags:
+        - Endpoints
+      operationId: put-event-type
+      summary: Update an event type by ID
+      description: This endpoint updates an event type by its [UUID](/reference/uuid-prefixes.
+      parameters:
+        - name: Authorization
+          in: header
+          description: An authorisation header containing meta information, see [OAuth2](/reference/authentication-2).
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: id
+          in: path
+          description: The ID of the event type object.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: |-
+          The data object that will be used to update the event type within the *eTrusted Platform*.
+
+          Currently this object contains a boolean to activate or deactivate an event type only.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventTypePut"
+      responses:
+        "200":
+          description: The updated event type.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventType"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientError"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientError"
+    delete:
+      tags:
+        - Endpoints
+      operationId: delete-event-type
+      summary: Delete an event type by ID
+      description: |-
+        This endpoint deletes an event type by its [UUID](/reference/uuid-prefixes.
+
+        Do note that related events, invites and reviews will not be deleted.
+
+        [Please contact us in case you are unsure removing event types!](https://etrusted.com/en/contact/)
+      parameters:
+        - name: Authorization
+          in: header
+          description: An authorisation header containing meta information, see [OAuth2](/reference/authentication-2).
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: id
+          in: path
+          description: The ID of the event type object.
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientError"
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClientError"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    EventType:
+      type: object
+      required:
+        - id
+        - createdAt
+        - updatedAt
+        - active
+        - name
+      properties:
+        id:
+          type: string
+          description: The event type ID as an *eTrusted* [UUID](/reference/uuid-prefixes.
+          example: ety-b8a7dd0b-2858-49e9-822c-8f4321caae1e
+        createdAt:
+          type: string
+          format: date-time
+          description: The date and time when the event type was created, in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) and [RFC 3339](https://tools.ietf.org/html/rfc3339) compliant format `yyyy-MM-dd’T’HH:mm:ss.SSSZ`.
+          example: "2023-02-14T17:15:30.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: The date and time when the event type was last modified, in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) and [RFC 3339](https://tools.ietf.org/html/rfc3339) compliant format `yyyy-MM-dd’T’HH:mm:ss.SSSZ`.
+          example: "2023-02-14T19:45:50.100Z"
+        active:
+          type: boolean
+          description: |-
+            A boolean value that indicates whether the event type is active or not.
+
+            If an event type is inactive, events for this type will not be accepted anymore.
+          example: true
+        name:
+          type: string
+          description: |-
+            The name of the event type.
+
+            `checkout` is the default event type for every account.
+
+            [Please contact us to add more event types for you!](https://etrusted.com/en/contact/)
+          example: after_sales
+    EventTypePost:
+      type: object
+      required:
+        - name
+      properties:
+        active:
+          type: boolean
+          default: true
+          description: |-
+            A boolean value that indicates whether the event type is active or not.
+
+            If an event type is inactive, events for this type will no longer be accepted.
+          example: true
+        name:
+          type: string
+          description: |-
+            The name of the event type.
+
+            It needs to be unique for your account and must match our pattern.
+          pattern: (?!^all$)(^[a-z0-9][-_a-z0-9]{1,253}[a-z0-9]$)
+          example: after_sales
+    EventTypePut:
+      type: object
+      required:
+        - active
+      properties:
+        active:
+          type: boolean
+          description: |-
+            A boolean value that indicates whether the event type is active or not.
+
+            If an event type is inactive, events for this type will no longer be accepted.
+          example: true
+    ClientError:
+      type: object
+      required:
+        - Error
+        - ErrorDescription
+      properties:
+        Error:
+          type: string
+          description: A summary of the error.
+          minLength: 1
+          example: Invalid request
+        ErrorDescription:
+          type: string
+          description: A detailed description of the error.
+          minLength: 1
+          example: 'Invalid event: instance requires property "name"'

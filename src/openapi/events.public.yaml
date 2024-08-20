@@ -1,0 +1,592 @@
+openapi: 3.0.1
+info:
+  title: Events API
+  description: |-
+    With *eTrusted*, you can dispatch event-triggered review invites to your customers and ask them for relevant feedback on services and products at the right time and in the proper context. An event can be triggered by any kind of transaction and is the basis for the invite. External systems such as CMS, shop software or ticket systems can trigger events via our *eTrusted Events API*.
+    You can define any number of event types to express different kinds of events and send the events to the *eTrusted Platform*. For example, "checkout", "delivery", "client contact" or "client support" are all suitable event types, derived from touch points along the customer journey. Within the *eTrusted Platform*, you are then able to configure a questionnaire for each event type and schedule the date and time the invite is dispatched to your customers.
+    Events may carry additional context information. For example you can put your customer feedback in the context of a business process and use it for your own reporting or analysis purposes.
+    You can trigger an invite email with *eTrusted* via our *Events API*.
+    Only one event per call can be triggered via the *Events API*. For a more complex operation, you need to implement a loop.
+  version: "1.0"
+  x-api-id: e8f3e86d-e364-456e-80b6-9b7f366b9acf
+servers:
+  - url: https://api.etrusted.com
+paths:
+  /events:
+    post:
+      tags:
+        - Endpoints
+      summary: Create a new event
+      description: |
+        This endpoint creates a new *eTrusted* event.
+
+        **NB:** In compliance with [GDPR](https://gdpr.eu/tag/chapter-3), customers should be given the option to opt-in to receive review invitations from you. Therefore, create events using data of **only** customers who have opted-in.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventRequest"
+        required: true
+      parameters:
+        - name: Authorization
+          in: header
+          description: An OAuth2 authorization header with an access token, see [OAuth2](/reference/authentication-2)
+          required: true
+          schema:
+            type: string
+      responses:
+        202:
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventPostResponse"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationError"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedError"
+        500:
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InternalServerError"
+        503:
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceUnavailable"
+      security:
+        - OAuth2: []
+  /events/{eventRef}:
+    get:
+      tags:
+        - Endpoints
+      summary: Get an event
+      description: |
+        This endpoint retrieves an *eTrusted* event by its ID.
+
+        It can be used to check if your events has been created correctly after a POST request.
+      parameters:
+        - name: Authorization
+          in: header
+          description: An OAuth2 authorization header with an access token, see [OAuth2](/reference/authentication-2)
+          required: true
+          schema:
+            type: string
+        - name: eventRef
+          in: path
+          description: |
+            This is the event ID in *eTrusted* [UUID](/reference/uuid-prefixes)format as a reference.
+            Event references are included in the response when you create an event via POST request.
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: The event with the ID that equals `eventRef`.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventGetResponse"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UnauthorizedError"
+        404:
+          description: Not Found
+          content: {}
+      security:
+        - OAuth2: []
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://login.etrusted.com/
+          tokenUrl: https://login.etrusted.com/auth/realms/business/protocol/openid-connect/token
+          scopes:
+            eTrusted: Currently, all API calls use OAuth2.
+  schemas:
+    EventPostResponse:
+      type: object
+      properties:
+        Message:
+          type: string
+          description: 'The response message: "Your event (`evt-xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx`) was accepted for processing".'
+          example: Your event (`evt-xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx`) was accepted for processing.
+        EventRef:
+          type: string
+          description: |
+            The event reference UUID.
+          example: evt-xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+    ValidationError:
+      type: object
+      properties:
+        Message:
+          type: string
+          description: |
+            The error message details.
+            In case of a missing required property, the message looks like this: "Invalid request: instance requires property `type`"
+          example: "Invalid request: instance requires property `type`"
+    ServiceUnavailable:
+      type: object
+      properties:
+        Message:
+          type: string
+          description: |
+            The error message details.
+            In case the server is down, it says "This service is temporarily unavailable".
+          example: This service is temporarily unavailable
+    EventGetResponse:
+      type: object
+      description: This object represents the response object of an *eTrusted* event.
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the event.
+          example: "evt-eacef7fe-5176-47b5-877d-b90a53a1cc68"
+        accountRef:
+          description: "The account reference ID the event belongs to"
+          type: "string"
+          example: acc-863c9d8d-1108-4591-868d-5e0aaad26cf4
+        type:
+          type: string
+          description: |
+            The event type.
+            It represents the touchpoint that triggered the event.
+            You can only use an event type that exists in your *eTrusted* configuration.<br>
+            Learn more about event types from our [help centre](https://help.etrusted.com/hc/en-gb/articles/360025746352-What-is-an-Event-#what-do-we-mean-by-transaction)<br>
+            Also, check out the [event type](/reference/get-event-types-1) documentation to learn more about the event type API.<br>
+            In any case please avoid setting the type to **"checkout"** as this is a reserved type.
+          example: delivery
+        defaultLocale:
+          type: string
+          description: |
+            The default [locale](/reference/locales) for this event.
+            If set, the default locale determines the language of the invite and the questionnaire that are triggered by the event.
+            If not set, the channel locale will be used instead.
+          example: de_DE
+        customer:
+          required:
+            - email
+          type: object
+          description: |
+            The customer object includes all data of the customer who is invited to leave a review.
+          properties:
+            firstName:
+              type: string
+              description: First name of the customer.
+              example: John
+            lastName:
+              type: string
+              description: Last name of the customer.
+              example: Doe
+            email:
+              type: string
+              description: |
+                Email address of the customer.
+                It must be a valid email address.
+              example: john.doe@example.com
+            address:
+              type: string
+              description: Address of the customer.
+              example: Anystr. 17, 12345, Anycity, Anystate 12345
+            mobile:
+              type: string
+              description: |
+                Mobile telephone number of the customer.
+                The mobile number must have international format including `+` and country code. (e.g. `+49123456789`).
+              example: "+49123456789"
+            reference:
+              type: string
+              description: The customer ID as a reference [UUID](/reference/uuid-prefixes.
+              example: cus-xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+        channel:
+          required:
+            - id
+          type: object
+          description: |
+            This object holds information about the [channel](/reference/get-channels-by-token) associated with the event.
+          properties:
+            id:
+              type: string
+              description: |
+                The unique identifier of the channel.
+                This can either be an *eTrusted* [UUID](/reference/uuid-prefixes)or an identifier from your own software eco-system.
+                Please see [Channel IDs](/reference/channel-ids).
+              example: chl-xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+            type:
+              type: string
+              description: |
+                This can be set to either `user_defined` if you defined the channel id yourself or `etrusted` if it was generated by the eTrusted system thus its in the format `chl-xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx`.
+                Please see [Channel IDs](/reference/channel-ids) for more.
+              example: etrusted
+              default: etrusted
+              enum:
+                - user_defined
+                - etrusted
+        tracking:
+          description: Provides information regarding where a review is coming.
+          required:
+            - id
+          type: object
+          properties:
+            client:
+              type: string
+              description: "Identifies the name of the client eg: `PUBLIC_EVENTS_API`."
+              example: PUBLIC_EVENTS_API
+            medium:
+              type: string
+              description: "Describes the medium through which the review will be collected ie: `API`, `WIDGET`, `WEB_APP`, `MOBILE_APP`"
+              example: API
+              default: API
+              enum:
+                - API
+                - WIDGET
+                - WEB_APP
+                - MOBILE_APP
+        transaction:
+          required:
+            - reference
+          type: object
+          description: |
+            The event transaction holds a reference to the transaction, order, process etc. within your own system that triggers the event.
+          properties:
+            reference:
+              type: string
+              description: |
+                The transaction reference identifies your internal transaction, order, process etc.
+
+                This string must be unique.
+                For example, it can be an order or invoice number such as `order-12345`.
+              example: order-12345
+            date:
+              type: string
+              description: |
+                The date and time when the transaction took place.
+                It is a timestamp in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) and [RFC 3339](https://tools.ietf.org/html/rfc3339) compliant format `yyyy-MM-dd’T’HH:mm:ss.SSSZ`. Check the [glossary](/docs/glossory#iso-8601) for examples of valid datetime formats.
+              format: date-time
+        estimatedDeliveryDate:
+          type: string
+          description:
+            The estimated date of the delivery. It is a date in the ISO 8601 and RFC3339
+            compliant format `yyyy-MM-dd`. Check the [glossary](/docs/glossory#iso-8601) for examples of valid datetime formats.
+          format: date
+          example: "2017-01-07"
+        products:
+          type: array
+          description: |
+            This is a list of products.
+            It contains the products that are associated with the event.
+            It includes all data needed for product reviews for these products.
+          items:
+            required:
+              - name
+              - sku
+              - url
+            type: object
+            properties:
+              gtin:
+                type: string
+                description: |
+                  The GTIN identifies the product globally.
+                  A GTIN can be an ISBN, an EAN, and much more.
+                  Refer to [gtin.info](https://www.gtin.info/)
+                example: "1234567890123"
+              imageUrl:
+                type: string
+                description: |
+                  A link to a product image.
+                  *eTrusted* can display an image of the product to the customer who is writing a review.
+                  This makes it easier for customers to remember and recognize the product.
+                example: https://www.specialbrandshop.com/article123-TS-WH-M/image.jpg
+              name:
+                type: string
+                description: |
+                  The product name contains information about a
+                  product that is associated with the event (e.g. `Specialbrand T-Shirt White M`).
+                example: Specialbrand T-Shirt White M
+              mpn:
+                type: string
+                description: |
+                  The Manufacturer Part Number is an identifier for a product by the manufacturer if applicable.
+                  In some cases it can serve as a substitute for the GTIN.
+                example: "23687778"
+              sku:
+                type: string
+                description: |
+                  The Stock Keeping Unit is a specific article number of the product, most often assigned by a specific retail shop as a scannable bar code.
+                  It lets the shops track movement of inventory.
+                  The SKU must be unique and usually consists of about 8 characters (e.g. `1234-TS-WH-M`).
+                example: 1234-TS-WH-M
+              brand:
+                type: string
+                description: |
+                  The brand of the product (e.g. `specialbrand`).
+                  A product can only have one brand.
+                example: specialbrand
+              url:
+                type: string
+                description: |
+                  A link to the product detail page in your online shop or public catalog (e.g. `http://www.specialbrandshop.com/article123-TS-WH-M/`).
+                example: https://www.specialbrandshop.com/article123-TS-WH-M/
+        system:
+          type: string
+          description: |
+            This is the system that issues the events API call.
+            This way you can identify the source system that called the events API.
+          example: customer_system_name
+        systemVersion:
+          type: string
+          description: |
+            This is the version of the source system.
+          example: "1.0"
+        metadata:
+          type: object
+          properties: {}
+          description: |
+            Add more information to your event via the metadata object.
+            This may be anything that you want to track or evaluate.
+          example:
+            metaKey1: metaValue1
+            metaKey2: metaValue2
+        createdAt:
+          type: string
+          format: date-time
+          description: The date and time when the event was created, in the ISO 8601 and RFC3339 compliant format `yyyy-MM-dd’T’HH:mm:ss.SSSZ`. Check the [glossary](/docs/glossory#iso-8601) for examples of valid datetime formats.
+          example: "2018-02-01T17:09:41.790Z"
+    EventRequest:
+      required:
+        - id
+        - accountRef
+        - channel
+        - customer
+        - system
+        - systemVersion
+        - transaction
+        - type
+      type: object
+      description: |
+        This object represents the request payload for creating an *eTrusted* event.
+
+        **NB:** In compliance with [GDPR](https://gdpr.eu/tag/chapter-3), customers should be given the option to opt-in to receive review invitations from you. Therefore, create events using data of **only** customers who have opted-in.
+      properties:
+        type:
+          type: string
+          description: |
+            The event type.
+            It represents the touchpoint that triggered the event.
+            You can only use an event type that exists in your *eTrusted* configuration.<br>
+            Learn more about event types from our [help centre](https://help.etrusted.com/hc/en-gb/articles/360025746352-What-is-an-Event-#what-do-we-mean-by-transaction)<br>
+            Also, check out the [event type](/reference/get-event-types-1) documentation to learn more about the event type API.<br>
+            In any case please avoid setting the type to "checkout" as this is a reserved type.
+          example: delivery
+        defaultLocale:
+          type: string
+          description: |
+            The default [locale](/reference/locales) for this event.
+            If set, the default locale determines the language of the invite and the questionnaire that are triggered by the event.
+            If not set, the channel locale will be used instead.
+          example: de_DE
+        customer:
+          required:
+            - email
+          type: object
+          description: |
+            The customer object includes all data of the customer who is invited to leave a review.
+          properties:
+            firstName:
+              type: string
+              description: First name of the customer.
+              example: John
+            lastName:
+              type: string
+              description: Last name of the customer.
+              example: Doe
+            email:
+              type: string
+              description: |
+                Email address of the customer.
+                It must be a valid email address.
+              example: john.doe@example.com
+            address:
+              type: string
+              description: Address of the customer.
+              example: Anystr. 17, 12345, Anycity, Anystate 12345
+            mobile:
+              type: string
+              description: |
+                Mobile telephone number of the customer.
+                The mobile number must have international format including `+` and country code. (e.g. `+49123456789`).
+              example: "+49123456789"
+            reference:
+              type: string
+              description: The customer's ID as a reference [UUID](/reference/uuid-prefixes.
+              example: cus-xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+        channel:
+          required:
+            - id
+          type: object
+          description: |
+            This object holds information about the [channel](/reference/get-channels-by-token) associated with the event.
+          properties:
+            id:
+              type: string
+              description: |
+                The unique identifier of the channel.
+                This can either be an *eTrusted* [UUID](/reference/uuid-prefixes)or an identifier from your own software eco-system.
+                Please see [Channel IDs](/reference/channel-ids).
+              example: chl-xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx
+            type:
+              type: string
+              description: |
+                This can be set to either `user_defined` if you defined the channel id yourself or `etrusted` if it was generated by the eTrusted system thus its in the format `chl-xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx`.
+                Please see [Channel IDs](/reference/channel-ids) for more.
+              example: etrusted
+              default: etrusted
+              enum:
+                - user_defined
+                - etrusted
+        transaction:
+          required:
+            - reference
+          type: object
+          description: |
+            The event transaction holds a reference to the transaction, order, process etc. within your own system that triggers the event.
+          properties:
+            reference:
+              type: string
+              description: |
+                The transaction reference identifies your internal transaction, order, process etc.
+
+                This string must be unique.
+                For example, it can be an order or invoice number such as `order-12345`.
+              example: order-12345
+            date:
+              type: string
+              description: |
+                The date and time when the transaction took place.
+                It is a timestamp in the [ISO 8601](https://www.iso.org/iso-8601-date-and-time-format.html) and [RFC 3339](https://tools.ietf.org/html/rfc3339) compliant format `yyyy-MM-dd’T’HH:mm:ss.SSSZ`. Check the [glossary](/docs/glossory#iso-8601) for examples of valid datetime formats.
+              format: date-time
+        estimatedDeliveryDate:
+          type: string
+          description:
+            The estimated date of the delivery. It is a date in the ISO 8601 and RFC3339
+            compliant format `yyyy-MM-dd`. Check the [glossary](/docs/glossory#iso-8601) for examples of valid datetime formats.
+          format: date
+          example: "2017-01-07"
+        products:
+          type: array
+          description: |
+            This is a list of products.
+            It contains the products that are associated with the event.
+            It includes all data needed for product reviews for these products.
+          items:
+            required:
+              - name
+              - sku
+              - url
+            type: object
+            properties:
+              gtin:
+                type: string
+                description: |
+                  The GTIN identifies the product globally.
+                  A GTIN can be an ISBN, an EAN, and much more.
+                  Refer to [gtin.info](https://www.gtin.info/)
+                example: "1234567890123"
+              imageUrl:
+                type: string
+                description: |
+                  A link to a product image.
+                  *eTrusted* can display an image of the product to the customer who is writing a review.
+                  This makes it easier for customers to remember and recognize the product.
+                example: https://www.specialbrandshop.com/article123-TS-WH-M/image.jpg
+              name:
+                type: string
+                description: |
+                  The product name contains information about a
+                  product that is associated with the event (e.g. `Specialbrand T-Shirt White M`).
+                example: Specialbrand T-Shirt White M
+              mpn:
+                type: string
+                description: |
+                  The Manufacturer Part Number is an identifier for a product by the manufacturer if applicable.
+                  In some cases it can serve as a substitute for the GTIN.
+                example: "23687778"
+              sku:
+                type: string
+                description: |
+                  The Stock Keeping Unit is a specific article number of the product, most often assigned by a specific retail shop as a scannable bar code.
+                  It lets the shops track movement of inventory.
+                  The SKU must be unique and usually consists of about 8 characters (e.g. `1234-TS-WH-M`).
+                example: 1234-TS-WH-M
+              brand:
+                type: string
+                description: |
+                  The brand of the product (e.g. `specialbrand`).
+                  A product can only have one brand.
+                example: specialbrand
+              url:
+                type: string
+                description: |
+                  A link to the product detail page in your online shop or public catalog (e.g. `http://www.specialbrandshop.com/article123-TS-WH-M/`).
+                example: https://www.specialbrandshop.com/article123-TS-WH-M/
+        system:
+          type: string
+          description: |
+            This is the system that issues the events API call.
+            This way you can identify the source system that called the events API.
+          example: customer_system_name
+        systemVersion:
+          type: string
+          description: |
+            This is the version of the source system.
+          example: "1.0"
+        metadata:
+          type: object
+          properties: {}
+          description: |
+            Add more information to your event via the metadata object.
+            This may be anything that you want to track or evaluate.
+          example:
+            metaKey1: metaValue1
+            metaKey2: metaValue2
+        createdAt:
+          type: string
+          format: date-time
+          description: The date and time when the event was created, in the ISO 8601 and RFC3339 compliant format `yyyy-MM-dd’T’HH:mm:ss.SSSZ`. Check the [glossary](/docs/glossory#iso-8601) for examples of valid datetime formats.
+          example: "2018-02-01T17:09:41.790Z"
+    UnauthorizedError:
+      type: object
+      properties:
+        Message:
+          type: string
+          description: |
+            The error message details.
+            If the request was not authorized, access is forbidden: "Access to this resource is forbidden"
+          example: Access to this resource is forbidden
+    InternalServerError:
+      type: object
+      properties:
+        Message:
+          type: string
+          description: |
+            The error message details.
+            E.g. "The server encountered an unexpected condition which prevented it from fulfilling the request"
+          example: The server encountered an unexpected condition which prevented it from fulfilling the request.
+x-readme:
+  explorer-enabled: false
