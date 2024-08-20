@@ -4,18 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
-    "generate:auth": "openapi-generator-cli generate -g typescript-axios -i src/openapi/authentication.public.yaml --config openapi-config.yaml -o src/generated/auth",
-    "generate:accounts": "openapi-generator-cli generate -g typescript-axios -i src/openapi/accounts.public.yaml --config openapi-config.yaml -o src/generated/accounts",
-    "generate:events": "openapi-generator-cli generate -g typescript-axios -i src/openapi/events.public.yaml --config openapi-config.yaml -o src/generated/events",
-    "generate:reviews": "openapi-generator-cli generate -g typescript-axios -i src/openapi/reviews.public.yaml --config openapi-config.yaml -o src/generated/reviews",
-    "generate:invites": "openapi-generator-cli generate -g typescript-axios -i src/openapi/invites.public.yaml --config openapi-config.yaml -o src/generated/invites",
-    "generate:invite-settings": "openapi-generator-cli generate -g typescript-axios -i src/openapi/invites-settings.public.yaml --config openapi-config.yaml -o src/generated/invite-settings",
-    "generate:event-types": "openapi-generator-cli generate -g typescript-axios -i src/openapi/events-types.public.yaml --config openapi-config.yaml -o src/generated/event-types",
-    "generate:questionnaire-links": "openapi-generator-cli generate -g typescript-axios -i src/openapi/questionnaire-links.public.yaml --config openapi-config.yaml -o src/generated/questionnaire-links",
-    "generate:reviews-aggregation-metadata": "openapi-generator-cli generate -g typescript-axios -i src/openapi/reviews-aggregation-metadata.public.yaml --config openapi-config.yaml -o src/generated/reviews-aggregation-metadata",
-    "generate:templates": "openapi-generator-cli generate -g typescript-axios -i src/openapi/templates.public.yaml --config openapi-config.yaml -o src/generated/templates",
-    "generate:all": "npm run generate:auth && npm run generate:accounts && npm run generate:events && npm run generate:reviews && npm run generate:invites && npm run generate:invite-settings && npm run generate:event-types && npm run generate:questionnaire-links && npm run generate:reviews-aggregation-metadata && npm run generate:templates"
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",
