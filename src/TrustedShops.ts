@@ -1,13 +1,19 @@
 import { AuthenticationManager } from "./auth/authenticationManager";
 import { ReviewsService } from "./services/ReviewsService";
 import { AccountService } from "./services/AccountService";
-import { Channel, UpdateChannel } from "./interfaces/Account.model";
+import { Channel, ChannelId, UpdateChannel } from "./interfaces/Account.model";
+import { ReviewOptions, ReviewState } from "interfaces/Review.model";
 
 export class TrustedShops {
   private static authManager: AuthenticationManager;
   public static Reviews: ReviewsService;
-  public static Account: AccountService;
+  private static Account: AccountService;
   private static channels: Channel[] = [];
+  private static defaultOptions: ReviewOptions = {
+    count: 999,
+    orderBy: "submittedAt",
+    // status: [ReviewState.APPROVED],
+  };
 
   private static readonly TOKEN_ENDPOINT =
     process.env.TOKEN_ENDPOINT ?? "https://login.etrusted.com/oauth/token";
@@ -45,7 +51,11 @@ export class TrustedShops {
     return TrustedShops.channels;
   }
 
-  public static getChannelById(id: string): Channel | undefined {
+  public static async refreshChannelsList(): Promise<Channel[]> {
+    return await TrustedShops.Account.getChannels();
+  }
+
+  public static getChannelById(id: ChannelId): Channel | undefined {
     return TrustedShops.channels.find((channel) => channel.id === id);
   }
 
@@ -67,34 +77,34 @@ export class TrustedShops {
     );
   }
 
-  public static async updateChannel(id: string, updateData: UpdateChannel) {
+  public static async updateChannel(id: ChannelId, updateData: UpdateChannel) {
     const response = await TrustedShops.Account.updateChannel(id, updateData);
     TrustedShops.channels = await TrustedShops.Account.getChannels();
     return response;
   }
 
   public static async getReviewsForChannel(
-    channelIdentifier: string,
-    options?: any
+    channelIdOrNameOrLocale: string,
+    options: ReviewOptions = { ...this.defaultOptions }
   ) {
     let channel: Channel | undefined;
 
-    if (channelIdentifier.startsWith("chl-")) {
-      channel = this.getChannelById(channelIdentifier);
+    if (channelIdOrNameOrLocale.startsWith("chl-")) {
+      channel = this.getChannelById(channelIdOrNameOrLocale);
     } else {
       channel =
-        this.getChannelByName(channelIdentifier) ||
-        this.getChannelByLocale(channelIdentifier);
+        this.getChannelByName(channelIdOrNameOrLocale) ||
+        this.getChannelByLocale(channelIdOrNameOrLocale);
     }
 
     if (!channel) {
-      throw new Error(`Channel not found: ${channelIdentifier}`);
+      throw new Error(`Channel not found: ${channelIdOrNameOrLocale}`);
     }
 
     return TrustedShops.Reviews.getReviews([channel.id], options);
   }
 
-  public static async getReviewsForAllChannels(options?: any) {
+  public static async getReviewsForAllChannels(options?: ReviewOptions) {
     const channelIds = TrustedShops.channels.map((channel) => channel.id);
     return TrustedShops.Reviews.getReviews(channelIds, options);
   }
