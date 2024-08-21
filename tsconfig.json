@@ -2,8 +2,22 @@
   "compilerOptions": {
     "baseUrl": "./src",
     "paths": {
-      "*": ["*", "auth/*"]
-    }
+      "interfaces/*": ["interfaces/*"],
+      "auth/*": ["auth/*"]
+    },
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "moduleResolution": "node",
+    "target": "ES6",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
