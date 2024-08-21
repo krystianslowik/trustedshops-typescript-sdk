@@ -1,14 +1,23 @@
 import { AuthenticationManager } from "./auth/authenticationManager";
 import { ReviewsService } from "./services/ReviewsService";
 import { AccountService } from "./services/AccountService";
+import { EventService } from "./services/EventsService";
 import { Channel, ChannelId, UpdateChannel } from "./interfaces/Account.model";
 import { ReviewOptions, ReviewState } from "interfaces/Review.model";
+import { get } from "http";
+import {
+  EventGetResponse,
+  EventPostResponse,
+  EventRequest,
+} from "interfaces/Events.model";
+import { channel } from "diagnostics_channel";
 
 export class TrustedShops {
   private static authManager: AuthenticationManager;
   public static Reviews: ReviewsService;
   private static Account: AccountService;
-  private static channels: Channel[] = [];
+  private static Events: EventService;
+  public static channels: Channel[] = [];
   private static defaultOptions: ReviewOptions = {
     count: 999,
     orderBy: "submittedAt",
@@ -33,8 +42,10 @@ export class TrustedShops {
 
     TrustedShops.Reviews = new ReviewsService(getAccessToken);
     TrustedShops.Account = new AccountService(getAccessToken);
+    TrustedShops.Events = new EventService(getAccessToken);
 
     TrustedShops.channels = await TrustedShops.Account.getChannels();
+    console.log("Kanaly: ", TrustedShops.channels);
   }
 
   public static async showToken(): Promise<string> {
@@ -48,7 +59,7 @@ export class TrustedShops {
   }
 
   public static getChannels(): Channel[] {
-    return TrustedShops.channels;
+    return this.channels;
   }
 
   public static async refreshChannelsList(): Promise<Channel[]> {
@@ -84,7 +95,7 @@ export class TrustedShops {
   }
 
   public static async getReviewsForChannel(
-    channelIdOrNameOrLocale: string,
+    channelIdOrNameOrLocale: ChannelId | string,
     options: ReviewOptions = { ...this.defaultOptions }
   ) {
     let channel: Channel | undefined;
@@ -107,5 +118,51 @@ export class TrustedShops {
   public static async getReviewsForAllChannels(options?: ReviewOptions) {
     const channelIds = TrustedShops.channels.map((channel) => channel.id);
     return TrustedShops.Reviews.getReviews(channelIds, options);
+  }
+
+  public static async triggerEvent(
+    eventData: EventRequest,
+    channelNameOrLocale?: string,
+    channelId?: ChannelId
+  ): Promise<EventPostResponse> {
+    const resolvedChannelId =
+      channelId ??
+      (channelNameOrLocale && (await this.getChannelId(channelNameOrLocale)));
+
+    if (resolvedChannelId) {
+      eventData.channel = { id: resolvedChannelId, type: "etrusted" };
+    }
+
+    console.log(
+      `Triggering event "${eventData.type}" for customer email "${eventData.customer.email}"...\n`
+    );
+
+    return await TrustedShops.Events.createEvent(eventData);
+  }
+
+  public static async checkEventDetails(
+    eventId: string
+  ): Promise<EventGetResponse> {
+    console.log(`Checking event data for event "${eventId}"...\n`);
+    return await TrustedShops.Events.getEvent(eventId);
+  }
+
+  public static getChannelId(
+    channelNameOrLocale: string,
+    fallback: boolean = false
+  ): ChannelId {
+    const channel =
+      this.getChannelByName(channelNameOrLocale) ||
+      this.getChannelByLocale(channelNameOrLocale);
+
+    if (channel) {
+      return channel.id;
+    }
+
+    if (fallback) {
+      return TrustedShops.channels[0].id;
+    }
+
+    throw new Error(`Channel not found: ${channelNameOrLocale}`);
   }
 }
