@@ -1,5 +1,3 @@
-TrustedShops TypeScript SDK
-
 # TrustedShops TypeScript SDK
 
 This SDK provides an easy-to-use interface for interacting with the TrustedShops API. It supports authentication, account management, and review operations. **Important:** Remember, use Authentication ONLY server-side.
