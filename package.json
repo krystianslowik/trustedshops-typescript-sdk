@@ -1,4 +1,51 @@
 {
   "name": "@krystianslowik/trustedshops-typescript-sdk",
-  "version": "v1.0.2"
+  "version": "v1.0.2",
+  "description": "A TypeScript SDK for interacting with Trusted Shops APIs.",
+  "main": "dist/TrustedShops.js",
+  "types": "dist/TrustedShops.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepublishOnly": "npm run build",
+    "publish:npm": "./publish.sh npm",
+    "publish:npm:patch": "./publish.sh npm patch",
+    "publish:npm:minor": "./publish.sh npm minor",
+    "publish:npm:major": "./publish.sh npm major",
+    "publish:github": "./publish.sh github",
+    "publish:github:patch": "./publish.sh github patch",
+    "publish:github:minor": "./publish.sh github minor",
+    "publish:github:major": "./publish.sh github major"
+  },
+  "keywords": [
+    "typescript",
+    "sdk",
+    "trustedshops",
+    "api"
+  ],
+  "author": "Krystian Slowik <me@krystianslowik.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/krystianslowik/trustedshops-typescript-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/krystianslowik/trustedshops-typescript-sdk/issues"
+  },
+  "homepage": "https://github.com/krystianslowik/trustedshops-typescript-sdk#readme",
+  "dependencies": {
+    "axios": "^1.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.4.1",
+    "typescript": "^5.5.4"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "docs"
+  ],
+  "engines": {
+    "node": ">=14.0.0"
+  }
 }
