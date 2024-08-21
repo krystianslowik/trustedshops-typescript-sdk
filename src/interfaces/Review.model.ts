@@ -1,10 +1,9 @@
-export enum ReviewState {
-  SUBMITTED = "SUBMITTED",
-  APPROVED = "APPROVED",
-  REJECTED = "REJECTED",
-  MODERATION = "MODERATION",
-  DISCARDED = "DISCARDED",
-}
+export type ReviewState =
+  | "SUBMITTED"
+  | "APPROVED"
+  | "REJECTED"
+  | "MODERATION"
+  | "DISCARDED";
 
 export enum FeedbackType {
   REVIEW = "REVIEW",
@@ -16,10 +15,7 @@ export enum VerificationType {
   UNDEFINED = "UNDEFINED",
 }
 
-export enum ReviewType {
-  SERVICE_REVIEW = "SERVICE_REVIEW",
-  PRODUCT_REVIEW = "PRODUCT_REVIEW",
-}
+export type ReviewType = "SERVICE_REVIEW" | "PRODUCT_REVIEW";
 
 export interface ReviewOptions {
   after?: string;

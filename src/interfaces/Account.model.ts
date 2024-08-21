@@ -1,3 +1,4 @@
+export type ChannelId = string;
 export interface Channel {
   id: string;
   createdAt: string;
