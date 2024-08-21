@@ -9,7 +9,7 @@ import {
   ReviewState,
   ReviewType,
   ReviewOptions,
-} from "../interfaces/Review.model";
+} from "../interfaces/";
 
 export class ReviewsService {
   private axios: AxiosInstance;

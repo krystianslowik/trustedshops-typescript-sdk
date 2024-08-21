@@ -1,9 +1,5 @@
 import axios, { AxiosInstance } from "axios";
-import {
-  Channel,
-  UpdateChannel,
-  ChannelResponse,
-} from "../interfaces/Account.model";
+import { Channel, UpdateChannel, ChannelResponse } from "../interfaces/";
 
 export class AccountService {
   private axios: AxiosInstance;

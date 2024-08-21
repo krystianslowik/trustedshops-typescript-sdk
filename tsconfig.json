@@ -3,6 +3,7 @@
     "baseUrl": "./src",
     "paths": {
       "interfaces/*": ["interfaces/*"],
+      "services/*": ["services/*"],
       "auth/*": ["auth/*"]
     },
     "outDir": "./dist",
