@@ -1,12 +1,12 @@
 {
   "name": "@krystianslowik/trustedshops-typescript-sdk",
-  "version": "v1.0.17",
+  "version": "v1.0.18",
   "description": "A TypeScript SDK for interacting with Trusted Shops APIs.",
   "main": "dist/TrustedShops.js",
   "types": "dist/TrustedShops.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "prepublishOnly": "npm run build",
     "publish:npm": "./publish.sh npm",
     "publish:npm:patch": "./publish.sh npm patch",
@@ -37,7 +37,10 @@
     "axios": "^1.4.0"
   },
   "devDependencies": {
+    "@types/jest": "^29.5.12",
     "@types/node": "^22.4.1",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.4",
     "typescript": "^5.5.4"
   },
   "files": [
@@ -47,5 +50,26 @@
   ],
   "engines": {
     "node": ">=14.0.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "roots": [
+      "<rootDir>/src",
+      "<rootDir>/test"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.+(ts|tsx|js)",
+      "**/?(*.)+(spec|test).+(ts|tsx|js)"
+    ],
+    "transform": {
+      "^.+\\.(ts|tsx)$": "ts-jest"
+    },
+    "collectCoverage": true,
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "text",
+      "lcov"
+    ]
   }
 }
