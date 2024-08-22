@@ -1,6 +1,15 @@
+[![TypeScript](https://img.shields.io/badge/types-TypeScript-blue.svg)](https://www.typescriptlang.org/)
+[![npm version](https://img.shields.io/npm/v/trustedshops-typescript-sdk.svg)](https://www.npmjs.com/package/trustedshops-typescript-sdk)
+[![GitHub Repo Size](https://img.shields.io/github/repo-size/krystianslowik/trustedshops-typescript-sdk.svg)](https://github.com/krystianslowik/trustedshops-typescript-sdk)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg)](https://nodejs.org/)
+
+<!-- [![Build Status](https://img.shields.io/github/actions/workflow/status/krystianslowik/trustedshops-typescript-sdk/ci.yml?branch=main)](https://github.com/krystianslowik/trustedshops-typescript-sdk/actions) -->
+
 # TrustedShops TypeScript SDK
 
-This SDK provides an easy-to-use interface for interacting with the TrustedShops API. It supports authentication, account management, and review operations. **Important:** Remember, use Authentication ONLY server-side.
+This SDK provides an easy-to-use interface for interacting with the TrustedShops API. It supports authentication, account management, and review operations.
+
+**Important:** Remember, use this repo ONLY server-side.
 
 ## Installation
 
@@ -10,6 +19,12 @@ To install the SDK, run:
 npm install trustedshops-typescript-sdk
 ```
 
+or
+
+```sh
+npm install @krystianslowik/trustedshops-typescript-sdk
+```
+
 ## Authentication
 
 Start by authenticating with your TrustedShops credentials:
@@ -17,7 +32,7 @@ Start by authenticating with your TrustedShops credentials:
 ```typescript
 import { TrustedShops } from "trustedshops-typescript-sdk";
 
-await TrustedShops.authenticate("your-client-id", "your-client-secret");
+await TrustedShops.initialize("your-client-id", "your-client-secret");
 ```
 
 ## Basic functionalities
@@ -28,35 +43,38 @@ After authentication, you can manage your channels & reviews:
 // Get all channels
 const allChannels = TrustedShops.getChannels();
 console.log("All channels:", allChannels);
+```
 
+```typescript
 // Refresh the list of channels
 const refreshedChannels = await TrustedShops.refreshChannelsList();
 console.log("Refreshed channels list:", refreshedChannels);
 
-// Get a channel by ID
-const channelById = TrustedShops.getChannelById("chl-12345");
+// Get a channel by ID, name, or locale
+const channelById = TrustedShops.getChannel("chl-12345");
 console.log("Channel by ID:", channelById);
 
-// Get a channel by name
-const myShopChannel = TrustedShops.getChannelByName("My Shop");
-console.log("My Shop channel:", myShopChannel);
+const channelByName = TrustedShops.getChannel("My Shop");
+console.log("Channel by name:", channelByName);
 
-// Get a channel by locale
-const germanChannel = TrustedShops.getChannelByLocale("de_DE");
-console.log("Channel for German locale:", germanChannel);
+const channelByLocale = TrustedShops.getChannel("de_DE");
+console.log("Channel by locale:", channelByLocale);
 
 // Get all channels by locale
 const germanChannels = TrustedShops.getChannelsByLocale("de_DE");
 console.log("All channels for German locale:", germanChannels);
+```
 
+```typescript
 // Update a channel
+const myShopChannel = TrustedShops.getChannel("My Shop");
 if (myShopChannel) {
   await TrustedShops.updateChannel(myShopChannel.id, {
     name: "My Updated Shop",
   });
   console.log(
     "Channel updated:",
-    await TrustedShops.getChannelById(myShopChannel.id)
+    await TrustedShops.getChannel(myShopChannel.id)
   );
 }
 
@@ -71,12 +89,15 @@ const reviewsForAllChannels = await TrustedShops.getReviewsForAllChannels({
   count: 20,
 });
 console.log("Reviews for all channels:", reviewsForAllChannels);
+```
 
-// Get a channel ID by name or locale with fallback option
-const channelId = TrustedShops.getChannelId("de_DE", true);
-console.log("Resolved Channel ID:", channelId);
-
+```typescript
 // Trigger an event with the specified event data, channel name, or channel ID
+const eventData = {
+  type: "purchase",
+  customer: { email: "customer@example.com" },
+  transaction: { reference: "ORDER12345" },
+};
 const eventResponse = await TrustedShops.triggerEvent(eventData, "en-US");
 console.log("Event created with reference:", eventResponse.EventRef);
 
@@ -85,11 +106,11 @@ const eventDetails = await TrustedShops.checkEventDetails("EVT123456");
 console.log("Event details:", eventDetails);
 ```
 
-# Deeper: ReviewsService Usage
+## Reviews Usage
 
 The `ReviewsService` in the `TrustedShops` class allows you to interact with the TrustedShops API to fetch, create, and manage reviews. Below are the available methods and examples of how to use them.
 
-## Fetch Reviews
+### Fetch Reviews
 
 You can fetch a list of reviews based on certain channels and filtering options.
 
@@ -222,7 +243,7 @@ console.log(reviewsCount);
 
 ## Event Management
 
-The Trusted Shops SDK provides methods to create and manage events associated with customer transactions. Below are the key methods related to event management.
+The TrustedShops SDK provides methods to create and manage events associated with customer transactions. Below are the key methods related to event management.
 
 ### `triggerEvent`
 
@@ -232,17 +253,15 @@ The `triggerEvent` method is used to create a new event, such as a purchase or o
 
 ```typescript
 public static async triggerEvent(
-  eventData: EventRequest,
-  channelNameOrLocale?: string,
-  channelId?: ChannelId
+  eventData: Partial<EventRequest>,
+  channelIdentifier?: ChannelId | string
 ): Promise<EventPostResponse>
 ```
 
 #### Parameters
 
-- `eventData` (**EventRequest**): The event data that includes details like event type, customer information, transaction reference, and product details.
-- `channelNameOrLocale` (**string**, optional): The name or locale of the channel associated with the event. If provided, the SDK will attempt to resolve the channel ID based on this value.
-- `channelId` (**ChannelId**, optional): The ID of the channel. If both `channelId` and `channelNameOrLocale` are provided, `channelId` takes precedence.
+- `eventData` (**Partial<EventRequest>**): The event data that includes details like event type, customer information, transaction reference, and product details.
+- `channelIdentifier` (**ChannelId | string**, optional): The ID, name, or locale of the channel associated with the event. If provided, the SDK will attempt to resolve the channel ID based on this value.
 
 #### Returns
 
@@ -254,7 +273,7 @@ A `Promise` that resolves to an `EventPostResponse`, which contains information 
 import { TrustedShops } from "trustedshops-sdk";
 
 async function createPurchaseEvent() {
-  const eventData = {
+  const eventData: Partial<EventRequest> = {
     type: "purchase",
     customer: {
       email: "customer@example.com",
@@ -345,7 +364,7 @@ The `EventPostResponse` interface defines the structure of the response returned
 
 The `EventGetResponse` interface defines the structure of the response returned when retrieving an event's details.
 
-#### Properties
+### Properties
 
 - `id` (**string**): The unique ID of the event.
 - `accountRef` (**string**): The reference to the account associated with the event.
