@@ -1,6 +1,6 @@
 {
   "name": "@krystianslowik/trustedshops-typescript-sdk",
-  "version": "v1.0.18",
+  "version": "v1.0.19",
   "description": "A TypeScript SDK for interacting with Trusted Shops APIs.",
   "main": "dist/TrustedShops.js",
   "types": "dist/TrustedShops.d.ts",
