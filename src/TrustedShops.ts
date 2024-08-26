@@ -33,8 +33,10 @@ export class TrustedShops {
   private static readonly defaultReviewOptions: ReviewOptions = {
     count: 999,
     orderBy: "submittedAt",
+    ignoreStatements: false,
   };
 
+  // #region Initialization / authorization handling
   /**
    * Initializes the TrustedShops class with authentication and services setup.
    * @param clientId - The client ID for authentication.
@@ -79,16 +81,6 @@ export class TrustedShops {
   }
 
   /**
-   * Refreshes the list of channels.
-   * @returns {Promise<Channel[]>} The updated list of channels.
-   */
-  public static async refreshChannelsList(): Promise<Channel[]> {
-    this.ensureInitialized();
-    this.channels = await this.Account.getChannels();
-    return this.channels;
-  }
-
-  /**
    * Gets the current access token.
    * @returns {Promise<string>} The current access token.
    * @throws {Error} If not authenticated.
@@ -96,6 +88,18 @@ export class TrustedShops {
   public static async showToken(): Promise<string> {
     this.ensureInitialized();
     return this.authManager.getAccessToken();
+  }
+  // #endregion
+
+  // #region Channel/Account management
+  /**
+   * Refreshes the list of channels.
+   * @returns {Promise<Channel[]>} The updated list of channels.
+   */
+  public static async refreshChannelsList(): Promise<Channel[]> {
+    this.ensureInitialized();
+    this.channels = await this.Account.getChannels();
+    return this.channels;
   }
 
   /**
@@ -151,7 +155,9 @@ export class TrustedShops {
     await this.refreshChannelsList();
     return response;
   }
+  // #endregion
 
+  // #region Reviews management
   /**
    * Gets reviews for a specific channel.
    * @param channelIdentifier - The channel ID, name, or locale.
@@ -186,6 +192,32 @@ export class TrustedShops {
     return this.Reviews.getReviews(channelIds, options);
   }
 
+  /**
+   * Gets reviews for a specific channel WITH comment & title only.
+   * @param channelIdentifier - The channel ID, name, or locale.
+   * @param options - The options for fetching reviews.
+   * @returns {Promise<CustomerReviewListResponse>} The list of reviews.
+   * @throws {Error} If the channel is not found.
+   */
+  public static async getReviewsWithoutStatements(
+    channelIdentifier: ChannelId | string,
+    options: ReviewOptions = {
+      ...this.defaultReviewOptions,
+      ignoreStatements: true,
+    }
+  ): Promise<CustomerReviewListResponse> {
+    this.ensureInitialized();
+
+    const channel = this.getChannel(channelIdentifier);
+
+    if (!channel || !channel.id)
+      throw new Error(`Channel not found: ${channelIdentifier}`);
+
+    return this.Reviews.getReviews([channel.id], options);
+  }
+  // #endregion
+
+  // #region Events management
   /**
    * Triggers an event for a specific channel.
    * @param eventData - The event data to be sent.
@@ -235,4 +267,6 @@ export class TrustedShops {
     console.log(`Checking event data for event "${eventId}"...\n`);
     return await this.Events.getEvent(eventId);
   }
+
+  // #endregion
 }
